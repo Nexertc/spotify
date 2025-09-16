@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini Spotify — Pemutar Offline</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <style>
+    body{ margin:0; font-family: Arial, sans-serif; background:#0f172a; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; }
+    .player{ width:360px; background:#111827; border-radius:14px; padding:18px; }
+    .cover{ height:160px; border-radius:10px; background:#374151; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:12px; }
+    .title{ font-size:16px; font-weight:bold; }
+    .artist{ font-size:12px; color:#9ca3af }
+    .controls{ display:flex; gap:12px; justify-content:center; margin:12px 0; }
+    button{ background:#1db954; border:0; color:#fff; cursor:pointer; padding:8px 12px; border-radius:6px; }
+    .progress{ width:100%; }
+    .playlist{ max-height:140px; overflow:auto; margin-top:12px; }
+    .track{ display:flex; justify-content:space-between; align-items:center; padding:6px; border-radius:6px; cursor:pointer; }
+    .track:hover{ background:#1db95422; }
+    .track.active{ background:#1db95444; }
+    .deleteBtn{ background:red; border:none; color:white; border-radius:4px; padding:2px 6px; cursor:pointer; font-size:12px; }
+    #installBtn{ margin-top:12px; width:100%; text-align:center; 
+      height: 5vh;
+    }
+  </style>
+</head>
+<body>
+  <div class="player">
+    <div class="cover" id="cover">🎵</div>
+    <div class="title" id="title">Tidak Ada Lagu</div>
+    <div class="artist" id="artist">—</div>
+
+    <input type="range" id="progress" class="progress" value="0" min="0" step="0.1" />
+
+    <div class="controls">
+      <button id="prev">⏮️</button>
+      <button id="play">▶️</button>
+      <button id="next">⏭️</button>
+    </div>
+
+    <input type="file" id="filePicker" accept="audio/*" multiple />
+
+    <div class="playlist" id="playlist"></div>
+
+    <!-- Tombol Install -->
+    <button id="installBtn">Install Aplikasi</button>
+  </div>
+
+  <audio id="audio" preload="auto"></audio>
+
+  <script src="app.js"></script>
+  <script>
+    // Daftarkan service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("✅ Service Worker terdaftar"))
+        .catch(err => console.error("❌ SW gagal:", err));
+    }
+
+    // Tombol install PWA
+    let deferredPrompt;
+    const installBtn = document.getElementById("installBtn");
+
+    // Event ketika aplikasi bisa diinstall
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = "block"; // tampilkan tombol
+    });
+
+    // Klik tombol install
+    installBtn.addEventListener("click", async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log("Pilihan user:", outcome);
+        deferredPrompt = null;
+      }
+    });
+
+    // Event ketika aplikasi berhasil diinstall
+    window.addEventListener("appinstalled", () => {
+      console.log("✅ Aplikasi terinstall");
+      installBtn.style.display = "none"; // sembunyikan tombol
+    });
+  </script>
+</body>
+</html>
